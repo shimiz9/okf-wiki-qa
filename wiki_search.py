@@ -7,30 +7,36 @@ active を上位に、deprecated は下げて明示する。QAエージェント
 NAS のホスト表記（IP やホスト名）は固定せず、--nas-host か環境変数 WIKI_NAS_HOST で環境に合わせて変更できる。
 出典は UNC ではなく file:// URL で出力し、ブラウザ(Edge/Chrome)から直接開けるようにする。"""
 import argparse, os, re, glob, sys
+from urllib.parse import quote, unquote
 
 # 出典の既定ホスト。環境変数 WIKI_NAS_HOST で上書きでき、--nas-host が最優先。
 DEFAULT_NAS_HOST = os.environ.get("WIKI_NAS_HOST", "tnas")
 
+def _encode_path(rest):
+    """file:// のパス部を percent-encode する。区切り / は残す。
+    日本語など非ASCIIや空白を含むパスは、そのままだとリンクとして認識されないため URL 化する。
+    既にエンコード済みでも二重にならないよう、一度 unquote してから quote する。"""
+    rest = rest.replace("\\", "/").lstrip("/")
+    return quote(unquote(rest), safe="/")
+
 def to_file_url(resource, nas_host):
     """UNC パス(\\\\HOST\\share\\...) を file:// URL に変換する。
-    ホスト部分を nas_host に置き換え、区切りを / にして Edge/Chrome から踏めるようにする。
-    既に file:// の場合はホストだけ差し替える。空や未知形式は安全側でそのまま返す。"""
+    ホスト部分を nas_host に置き換え、区切りを / にし、パスを percent-encode して
+    Edge/Chrome でクリック可能なリンクとして認識されるようにする。
+    既に file:// の場合はホストを差し替える。空や未知形式は安全側で扱う。"""
     if not resource:
         return ""
     r = resource.strip()
     # 既に file:// 形式：file://HOST/rest → ホストだけ差し替え
     m = re.match(r"^file://([^/]*)/(.*)$", r, re.I)
     if m:
-        return f"file://{nas_host}/{m.group(2)}"
-    # UNC: \\HOST\share\path...
-    m = re.match(r"^\\\\([^\\]+)\\(.*)$", r)
-    if m:
         rest = m.group(2)
     else:
+        # UNC: \\HOST\share\path...
+        m = re.match(r"^\\\\([^\\]+)\\(.*)$", r)
         # 先頭の \\ が無い等の未知形式は、区切り変換だけ行う
-        rest = r.lstrip("\\/")
-    rest = rest.replace("\\", "/")
-    return f"file://{nas_host}/{rest}"
+        rest = m.group(2) if m else r.lstrip("\\/")
+    return f"file://{nas_host}/{_encode_path(rest)}"
 
 def parse(text):
     m = re.match(r"^---\s*\n(.*?)\n---\s*\n(.*)$", text, re.S)

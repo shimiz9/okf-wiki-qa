@@ -21,6 +21,7 @@ FAQ.md はそこから毎回レンダリングする（OKFコンセプトとし�
 """
 import argparse, os, re, json, sys, unicodedata
 from datetime import date
+from urllib.parse import unquote
 
 DEF_THRESHOLD = int(os.environ.get("FAQ_PROMOTE_THRESHOLD", "3"))
 DEF_CAND_TTL  = int(os.environ.get("FAQ_CANDIDATE_TTL_DAYS", "90"))
@@ -108,7 +109,9 @@ def render_faq_md(category, rows, archived=False):
             lines.append("")
             lines.append("出典:")
             for s in r["sources"]:
-                lines.append(f"- {s}")
+                # クリックできるよう Markdown リンクにする。表示名は URL 末尾をデコードした読みやすい形。
+                name = unquote(s.rstrip("/").rsplit("/", 1)[-1]) or s
+                lines.append(f"- [{name}]({s})")
         lines.append("")
         lines.append(f"<!-- 質問回数: {r.get('count', 0)} / 最終参照: {r.get('last_hit', '')} -->")
         lines.append("")
