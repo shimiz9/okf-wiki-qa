@@ -109,9 +109,12 @@ def render_faq_md(category, rows, archived=False):
             lines.append("")
             lines.append("出典:")
             for s in r["sources"]:
-                # クリックできるよう Markdown リンクにする。表示名は URL 末尾をデコードした読みやすい形。
-                name = unquote(s.rstrip("/").rsplit("/", 1)[-1]) or s
-                lines.append(f"- [{name}]({s})")
+                # OpenClaw 等は file:// を踏めないため Markdown リンクにしない。
+                # 文書名と URL を併記し、URL はコピペしやすい読みやすい形（1行）で出す。
+                url = unquote(s)
+                name = url.rstrip("/").rsplit("/", 1)[-1] or url
+                lines.append(f"- {name}")
+                lines.append(f"  {url}")
         lines.append("")
         lines.append(f"<!-- 質問回数: {r.get('count', 0)} / 最終参照: {r.get('last_hit', '')} -->")
         lines.append("")

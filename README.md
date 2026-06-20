@@ -63,9 +63,15 @@ python wiki_search.py \
 > 出典は wiki に格納された UNC パス（`\\192.168.40.22\public\...`）を `file://<NAS_HOST>/public/...` に
 > 変換して出力します。ホスト部分は固定せず、`--nas-host` か環境変数 `WIKI_NAS_HOST` で環境に合わせて変更できます。
 >
-> 日本語など非ASCII文字は **percent-encode** されます（裸のままだとリンクとして認識されないため）。
-> 回答に載せるときは `[表示名](file://...)` の **Markdown リンク形式**にしてクリック可能にします。
-> 例：`[経費精算規程](file://tnas/public/%E3%83%9E%E3%83%8B%E3%83%A5%E3%82%A2%E3%83%AB/...docx)`
+> URL は**読みやすい日本語のまま**出力します（percent-encode しません）。OpenClaw など `file://` を
+> クリックできない UI でも使えるよう、回答では **Markdown リンクにせず「文書名＋URL」を併記**し、
+> ユーザーが URL をコピーしてブラウザのアドレスバーに貼れる形にします。
+>
+> ```
+> 出典:
+> - 経費精算規程.docx
+>   file://tnas/public/マニュアル/経理/経費精算規程.docx
+> ```
 
 ## FAQ 自動更新（faq_update.py）
 
